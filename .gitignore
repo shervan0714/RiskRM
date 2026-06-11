@@ -1,0 +1,18 @@
+# Python Environments
+venv/
+__pycache__/
+*.pyc
+
+# C++ Build Artifacts
+build/
+.vs/
+out/
+*.obj
+*.o
+
+# External Dependencies
+eigen/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
