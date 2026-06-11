@@ -7,24 +7,28 @@
 #include <vector>
 #include <iostream>
 
-std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Dataset::generate_synthetic_data(
+using namespace std;
+
+tuple<Eigen::MatrixXd, Eigen::VectorXd> Dataset::generate_synthetic_data(
     int num_samples, double spurious_strength) {
 
     Eigen::MatrixXd X(num_samples, 2);
     Eigen::VectorXd Y(num_samples);
 
-    std::mt19937 gen(42); 
-    std::normal_distribution<double> dist(0.0, 1.0);
+    mt19937 gen(42); 
+    normal_distribution<double> dist(0.0, 1.0);
 
     for (int i = 0; i < num_samples; ++i) {
         double S = dist(gen);
-        // V is highly correlated with S
+        
+        // V is trap variable. it follows S mostly, so normal models will easily get confused
         double V = S + 0.1 * dist(gen);
 
         X(i, 0) = S;
         X(i, 1) = V;
 
-        // The secret sauce for RSW: Non-linear misspecification
+        // main trick for RSW: adding non linear cubic curve
+        // linear models cant fit this properly so they will distribute the error
         double misspecification = 0.5 * S * S * S;
         double noise = 0.3 * dist(gen);
 
@@ -34,43 +38,43 @@ std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Dataset::generate_synthetic_data(
     return {X, Y};
 }
 
-// --- Enterprise CSV Reader ---
-std::tuple<Eigen::MatrixXd, Eigen::VectorXd> Dataset::load_csv(const std::string& filepath) {
-    std::ifstream file(filepath);
+// --- CSV Loader ---
+tuple<Eigen::MatrixXd, Eigen::VectorXd> Dataset::load_csv(const string& filepath) {
+    ifstream file(filepath);
     if (!file.is_open()) {
-        std::cerr << "CRITICAL ERROR: Could not open " << filepath << "\n";
+        cerr << "Error: File not found at " << filepath << ". did you run python script first?\n";
         exit(1);
     }
 
-    std::string line;
-    std::vector<std::vector<double>> data;
+    string line;
+    vector<vector<double>> data;
 
-    // Skip the header row (Order_Imbalance, Trade_Volume, Future_Return)
-    std::getline(file, line);
+    // skip header line otherwise stod will give error for strings
+    getline(file, line);
 
-    // Read the file line by line
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string val;
-        std::vector<double> row;
+    // read file line by line
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string val;
+        vector<double> row;
         
-        while (std::getline(ss, val, ',')) {
-            row.push_back(std::stod(val)); // Convert string to double
+        while (getline(ss, val, ',')) {
+            row.push_back(stod(val)); 
         }
         
-        // Prevent crashing on empty lines at the end of the file
+        // handle empty lines at end so code doesnt crash
         if (!row.empty()) {
             data.push_back(row);
         }
     }
 
     int rows = data.size();
-    int cols = data[0].size() - 1; // The last column is the Target (Y)
+    int cols = data[0].size() - 1; // last col is Y
 
     Eigen::MatrixXd X(rows, cols);
     Eigen::VectorXd Y(rows);
 
-    // Transfer from standard vectors into Eigen Matrices for high-speed math
+    // shifting from normal vectors to Eigen matrix because Eigen is very fast for math operations
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             X(i, j) = data[i][j];
