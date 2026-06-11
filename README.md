@@ -90,8 +90,29 @@ The engine was benchmarked against standard linear models. All models were train
 **Execution Speed:** ~1.21 seconds (Analytical Gradients, 2000 Epochs).
 
 ---
-📂 Repository StructureThis codebase is cleanly separated into the high-performance C++ backend, the Python interface, and the evaluation scripts. Here is a guide to navigating the repository:Core C++ Engine (The Backend)rsw_model.cpp & rsw_model.hpp: The heart of the RiskRM engine. Contains the core mathematics, including the covariate-determining environment generation (via Sigmoid projections) and the exact analytical gradients using Eigen matrix calculus.bindings.cpp: The PyBind11 translation layer. This file explicitly maps the C++ classes and functions (like .fit() and .predict()) so they can be called natively within Python.dataset.cpp & dataset.hpp: C++ side data structures and memory management utilities for handling market matrices before they hit the optimizer.main.cpp: The legacy standalone C++ executable used for pure C++ benchmarking before the PyBind11 Python microservice architecture was implemented.Python Evaluation & Visualization (The Frontend)generate_market_data.py: Generates the synthetic causal market_data.csv. It injects the specific nonlinear signal ($2.5S + 0.5S^3$) and the spurious trap variable ($V$) to create the Normal and Flash Crash market regimes.test_wrapper.py: The primary evaluation pipeline. It loads the data, strictly trains the baseline models (OLS, Ridge, Lasso) and the C++ RiskRM engine on the Normal regime, and calculates Out-of-Distribution (OOD) RMSE on the Crash regime.plot_results.py & plot_variance.py: Visualization scripts used to generate the benchmark comparison graphs proving the elimination of the spurious correlation.Build & ConfigurationCMakeLists.txt: The cross-platform build configuration file. It dictates how the C++ compiler links Eigen, OpenMP, and PyBind11 to generate the final .pyd or .so binary.requirements.txt: The Python dependencies (scikit-learn, pandas, numpy, matplotlib) required to run the evaluation wrappers..gitignore: Ensures that massive build artifacts (/build), virtual environments, and external C++ libraries (/eigen) are kept out of the production repository.
----
+
+## 📂 Repository Structure
+
+This codebase is cleanly separated into the high-performance C++ backend, the Python interface, and the evaluation scripts. Here is a guide to navigating the repository:
+
+### Core C++ Engine (The Backend)
+
+* **`rsw_model.cpp` & `rsw_model.hpp`:** The heart of the RiskRM engine. Contains the core mathematics, including the covariate-determining environment generation (via Sigmoid projections) and the exact analytical gradients using Eigen matrix calculus.
+* **`bindings.cpp`:** The PyBind11 translation layer. This file explicitly maps the C++ classes and functions (like `.fit()` and `.predict()`) so they can be called natively within Python.
+* **`dataset.cpp` & `dataset.hpp`:** C++ side data structures and memory management utilities for handling market matrices before they hit the optimizer.
+* **`main.cpp`:** The legacy standalone C++ executable used for pure C++ benchmarking before the PyBind11 Python microservice architecture was implemented.
+
+### Python Evaluation & Visualization (The Frontend)
+
+* **`generate_market_data.py`:** Generates the synthetic causal `market_data.csv`. It injects the specific nonlinear signal ($2.5S + 0.5S^3$) and the spurious trap variable ($V$) to create the Normal and Flash Crash market regimes.
+* **`test_wrapper.py`:** The primary evaluation pipeline. It loads the data, strictly trains the baseline models (OLS, Ridge, Lasso) and the C++ RiskRM engine on the Normal regime, and calculates Out-of-Distribution (OOD) RMSE on the Crash regime.
+* **`plot_results.py` & `plot_variance.py`:** Visualization scripts used to generate the benchmark comparison graphs proving the elimination of the spurious correlation.
+
+### Build & Configuration
+
+* **`CMakeLists.txt`:** The cross-platform build configuration file. It dictates how the C++ compiler links Eigen, OpenMP, and PyBind11 to generate the final `.pyd` or `.so` binary.
+* **`requirements.txt`:** The Python dependencies (`scikit-learn`, `pandas`, `numpy`, `matplotlib`) required to run the evaluation wrappers.
+* **`.gitignore`:** Ensures that massive build artifacts (`/build`), virtual environments, and external C++ libraries (`/eigen`) are kept out of the production repository.
 
 ## 🚀 Quickstart & Build Instructions
 
